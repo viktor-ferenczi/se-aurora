@@ -2,26 +2,29 @@
 <PluginData xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="GitHubPlugin">
 
     <!-- The ID of your plugin, never change this -->
-    <Id>A061FC6C-713E-42CD-B413-151AC8A5074C</Id>
+    <Id>EAE23956-6E0C-420C-A57A-1C3BEF85436E</Id>
 
     <!-- GitHub repository ID -->
-    <RepoId>todo-github-user/project-name</RepoId>
+    <RepoId>viktor-ferenczi/se-aurora</RepoId>
 
     <!-- The name of your plugin that will appear in the plugin list -->
-    <FriendlyName>TODO ClientPluginTemplate</FriendlyName>
+    <FriendlyName>Aurora Borealis (Northern Lights)</FriendlyName>
 
     <!-- The author name that you want to appear in the plugin list -->
-    <Author>TODO Author Name</Author>
+    <Author>Viktor</Author>
 
     <!-- Optional tooltip for the plugin in the plugin list -->
-    <Tooltip>TODO Short description</Tooltip>
+    <Tooltip>Aurora Borealis (Northern Lights) over the poles of planets with an atmosphere.</Tooltip>
 
     <!-- Optional plugin description. If omitted, this will be the same as the Tooltip. 1000 characters max. -->
-    <Description>TODO Long description, multiple lines.
+    <Description>Renders volumetric Aurora Borealis (Northern Lights)
+over the poles of planets which have an atmosphere.
 
-        This text is shown on the plugin details panel in a scrollable text box.
+Open the plugin's Settings for the configuration.
+	
+For support please join the Pulsar Discord: https://discord.gg/z8ZczP2YZY
 
-        You can use links here, players can click on them. For example, add a Discord invite.
+Please consider supporting my work on Patreon: https://www.patreon.com/semods
     </Description>
 
     <!-- Only source code in the Directory entries listed in SourceDirectories is compiled. Exclude any test projects or similar. -->

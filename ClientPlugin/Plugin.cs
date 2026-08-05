@@ -33,7 +33,12 @@ public class Plugin : IPlugin
         Instance = this;
         Instance.settingsGenerator = new SettingsGenerator();
 
-        ExtractShader();
+        // When Pulsar builds the plugin from source it calls LoadAssets with the folder the
+        // shader was copied into; that wins. Otherwise (msbuild/IDE build) fall back to the
+        // copy embedded into the assembly.
+        if (AuroraRenderer.ShaderFilePath == null)
+            ExtractEmbeddedShader();
+
         Config.Current.PropertyChanged += OnConfigPropertyChanged;
 
         var harmony = new Harmony(Name);
@@ -63,31 +68,50 @@ public class Plugin : IPlugin
         }
     }
 
-    // The shader must exist as a file, because the game's shader compiler loads shaders
-    // from disk (and reloads them after device resets). Extract the embedded resource
-    // into the plugin's storage folder and hand the absolute path to the renderer.
-    private static void ExtractShader()
+    // Called by Pulsar with the folder the plugin's asset files were copied into.
+    // The game's shader compiler loads shaders from disk, so the .hlsl file has to be there.
+    // ReSharper disable once UnusedMember.Global
+    public void LoadAssets(string folder)
     {
         try
         {
-            var directory = Path.Combine(MyFileSystem.UserDataPath, "Storage", Name);
-            Directory.CreateDirectory(directory);
-            var path = Path.Combine(directory, "AuroraBorealis.hlsl");
-
-            using (var resource = Assembly.GetExecutingAssembly()
-                       .GetManifestResourceStream("ClientPlugin.Shaders.AuroraBorealis.hlsl"))
-            using (var file = File.Create(path))
-            {
-                if (resource == null)
-                    throw new InvalidOperationException("Embedded shader resource not found");
-                resource.CopyTo(file);
-            }
-
-            AuroraRenderer.ShaderFilePath = path;
+            var path = Path.Combine(folder, "AuroraBorealis.hlsl");
+            if (File.Exists(path))
+                AuroraRenderer.ShaderFilePath = path;
+            else
+                MyLog.Default.Warning($"{Name}: Shader not found in the asset folder: {path}");
         }
         catch (Exception e)
         {
-            MyLog.Default.Error($"{Name}: Failed to extract the shader, the aurora will not render: {e}");
+            MyLog.Default.Error($"{Name}: Failed to load assets from {folder}: {e}");
+        }
+    }
+
+    // Fallback for msbuild/IDE builds, which embed the shader into the assembly:
+    // extract it into the plugin's storage folder and use that absolute path.
+    private static void ExtractEmbeddedShader()
+    {
+        try
+        {
+            using (var resource = Assembly.GetExecutingAssembly()
+                       .GetManifestResourceStream("ClientPlugin.Shaders.AuroraBorealis.hlsl"))
+            {
+                if (resource == null)
+                    return;
+
+                var directory = Path.Combine(MyFileSystem.UserDataPath, "Storage", Name);
+                Directory.CreateDirectory(directory);
+                var path = Path.Combine(directory, "AuroraBorealis.hlsl");
+
+                using (var file = File.Create(path))
+                    resource.CopyTo(file);
+
+                AuroraRenderer.ShaderFilePath = path;
+            }
+        }
+        catch (Exception e)
+        {
+            MyLog.Default.Error($"{Name}: Failed to extract the embedded shader: {e}");
         }
     }
 

@@ -21,3 +21,8 @@ Renders volumetric Aurora Borealis (Northern Lights)
 over the poles of planets which have an atmosphere.
 
 Open the plugin's Settings for the configuration.
+
+## Documentation
+
+- [Implementation plan](Docs/Plan.md)
+- [In-game test results](Docs/Testing/README.md) — screenshots and what was verified

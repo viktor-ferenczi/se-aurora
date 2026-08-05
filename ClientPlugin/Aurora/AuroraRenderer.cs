@@ -131,7 +131,11 @@ public static class AuroraRenderer
 
             var path = ShaderFilePath;
             if (path == null)
+            {
+                shaderInitialized = true;
+                MyLog.Default.Error($"{Plugin.Name}: No shader file available, the aurora will not render");
                 return false;
+            }
 
             try
             {
@@ -181,10 +185,10 @@ public static class AuroraRenderer
         float sinHi = (float)Math.Sin(latHi);
         float feather = Math.Max((sinHi - sinLo) * 0.25f, 1e-4f);
 
-        // Two integer tiling factors so the longitude seam matches; their difference
-        // plus the differential scroll makes the difference-veins writhe.
-        const float tiling1 = 12f;
-        const float tiling2 = 16f;
+        // Noise tiling over the azimuthal projection of the polar cap. The two layers are
+        // close in scale so their difference forms thin veins rather than blobs.
+        const float tiling1 = 18f;
+        const float tiling2 = 21f;
 
         double t = MyCommon.FrameTime.Seconds * config.AnimationSpeed;
         float Frac(double v) => (float)(v - Math.Floor(v));
@@ -201,8 +205,9 @@ public static class AuroraRenderer
             BandParams = new Vector4(sinLo, sinHi, feather, 0f),
             NoiseParams = new Vector4(tiling1, tiling2, 0.25f, 4f),
             ScrollOffsets = scroll,
-            // Base HDR boost of 5 puts the peak emission above 1.0 so the game's bloom glows.
-            ColorIntensity = new Vector4(1f, 1f, 1f, config.Intensity * 5f),
+            // The shader saturates its emission to this value, so the boost sets how far the
+            // brightest curtains reach past 1.0 into the game's bloom.
+            ColorIntensity = new Vector4(1f, 1f, 1f, config.Intensity * 2f),
             StepParams = new Vector4(config.StepCount, 1f, nightFactor, 0.6f),
         };
     }

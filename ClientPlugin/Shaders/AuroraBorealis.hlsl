@@ -132,9 +132,10 @@ void __pixel_shader(PostprocessVertex input, out float4 output : SV_Target0)
         if (bandMask <= 0)
             continue;
 
-        // Noise UV from longitude/latitude; U tiling is an integer so the seam at ±pi matches.
-        float lon = atan2(dot(dir, Tangent2.xyz), dot(dir, Tangent1.xyz)) * (0.5 / 3.14159265) + 0.5;
-        float2 uvBase = float2(lon, sinLat);
+        // Azimuthal (tangent plane) coordinates around the pole axis. A longitude/latitude
+        // parameterisation would compress U as the meridians converge, smearing the noise
+        // into radial spokes over the pole, and needs a seam at ±pi; this has neither.
+        float2 uvBase = float2(dot(dir, Tangent1.xyz), dot(dir, Tangent2.xyz));
         float2 uv1 = uvBase * NoiseParams.x + ScrollOffsets.xy;
         float2 uv2 = uvBase * NoiseParams.y + ScrollOffsets.zw;
 
@@ -157,6 +158,11 @@ void __pixel_shader(PostprocessVertex input, out float4 output : SV_Target0)
         accum += ramp.rgb * (ramp.a * curtain * curtain * bandMask);
     }
 
-    float3 color = accum * (stepLen / shellThickness) * ColorIntensity.rgb * intensity;
+    // Accumulated emission per unit of shell thickness. A ray crossing the shell near the
+    // tangent travels many times its thickness, so the raw integral is unbounded; saturate
+    // it exponentially to keep the brightest curtains inside the tint's HDR range instead
+    // of flooding the sky when the camera sits under the shell.
+    float3 optical = accum * (stepLen / shellThickness);
+    float3 color = ColorIntensity.rgb * intensity * (1 - exp(-optical));
     output = float4(color, 1);   // additive blend; alpha is ignored
 }

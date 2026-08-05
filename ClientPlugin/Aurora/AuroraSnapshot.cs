@@ -20,11 +20,20 @@ public sealed class AuroraSnapshot
     /// <summary>Magnetic pole axis (unit vector, planet's local up).</summary>
     public readonly Vector3 PoleAxis;
 
-    public AuroraSnapshot(Vector3D planetCenter, float innerRadius, float outerRadius, Vector3 poleAxis)
+    /// <summary>
+    /// Brightness scale from the planet's ground level air density, relative to an
+    /// Earthlike atmosphere (which is exactly 1.0). Always above zero: a planet without
+    /// an atmosphere produces no snapshot at all.
+    /// </summary>
+    public readonly float DensityFactor;
+
+    public AuroraSnapshot(Vector3D planetCenter, float innerRadius, float outerRadius, Vector3 poleAxis,
+        float densityFactor)
     {
         PlanetCenter = planetCenter;
         InnerRadius = innerRadius;
         OuterRadius = outerRadius;
         PoleAxis = poleAxis;
+        DensityFactor = densityFactor;
     }
 }

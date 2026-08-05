@@ -56,6 +56,41 @@ dimmer and more structured than the same shot at the old settings.
 The screenshots in the rest of this document were taken **before** this change, at the
 original 0.5–1.0 altitude and 2× multiplier.
 
+## Atmosphere gating and density scaling
+
+The aurora is limited to planets that have an atmosphere, and its brightness now follows
+that atmosphere's density at ground level, normalised so an Earthlike planet is exactly
+1.0. `MyPlanet.GetAirDensity()` reduces to the generator's `Atmosphere.Density` at
+`AverageRadius` and returns 0 without an atmosphere, so a single call both gates the effect
+and scales it.
+
+Vanilla planet densities — only Alien differs from Earth, and `MyPlanetAtmosphere.Density`
+defaults to 1.0 when a definition omits it (Titan, Europa):
+
+| Planet | Has atmosphere | Ground density | Brightness |
+|---|---|---|---|
+| EarthLike | yes | 1.0 | ×1.0 |
+| Alien | yes | 1.2 | ×1.2 |
+| Mars, Triton, Pertam, Titan, Europa | yes | 1.0 | ×1.0 |
+| **Moon** | **no** | 0 | **disabled** |
+
+The sampler logs one line per planet it switches to, so the chosen target and its
+brightness are checkable without reading pixels:
+
+```
+Aurora: nearest planet 'EarthLike': air density 1 -> brightness x1, shell 71.3-82.5 km
+Aurora: nearest planet 'Moon': no atmosphere, aurora disabled
+```
+
+EarthLike at density 1.0 — the reference brightness, unchanged by the scaling:
+
+![EarthLike](Screenshots/13-earthlike-density-1.jpg)
+
+The Moon, 25 km from its centre. It has no atmosphere, so the effect is off entirely even
+though the Earthlike planet is only 178 km away and well inside the plugin's range gate:
+
+![Moon](Screenshots/14-moon-no-atmosphere.jpg)
+
 ## What was verified
 
 | # | Check | Result |
@@ -77,6 +112,8 @@ original 0.5–1.0 altitude and 2× multiplier.
 | 15 | Config persists to `%AppData%\SpaceEngineers\Storage\Aurora.cfg` | pass |
 | 16 | No exceptions or error spam in the game / Pulsar logs | pass |
 | 17 | Altitude / thickness / brightness changes take effect as configured | pass, [see above](#lowered-aurora-current-defaults) |
+| 18 | Airless planets and moons get no aurora at all | pass, [screenshot](Screenshots/14-moon-no-atmosphere.jpg) |
+| 19 | Brightness scales with ground level atmosphere density, Earthlike = 1.0 | pass, [see above](#atmosphere-gating-and-density-scaling) |
 
 ## Screenshots
 

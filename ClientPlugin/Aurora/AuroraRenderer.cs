@@ -206,8 +206,8 @@ public static class AuroraRenderer
             NoiseParams = new Vector4(tiling1, tiling2, 0.25f, 4f),
             ScrollOffsets = scroll,
             // The shader saturates its emission to this value, so the boost sets how far the
-            // brightest curtains reach past 1.0 into the game's bloom.
-            ColorIntensity = new Vector4(1f, 1f, 1f, config.Intensity * 2f),
+            // brightest curtains reach into the game's bloom.
+            ColorIntensity = new Vector4(1f, 1f, 1f, config.Intensity * 1f),
             StepParams = new Vector4(config.StepCount, 1f, nightFactor, 0.6f),
         };
     }

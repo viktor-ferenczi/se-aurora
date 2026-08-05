@@ -17,6 +17,45 @@ In-game verification of the Aurora plugin, run through Pulsar (Interim) with the
 polar regions, and shuts the effect off cleanly. Two rendering defects were found during
 the run and fixed; the screenshots below show both states.
 
+The shell was then lowered, thinned and dimmed (see
+[Lowered aurora](#lowered-aurora-current-defaults)) and retested at the same vantage
+points.
+
+## Lowered aurora (current defaults)
+
+`AltitudeMin` 0.5 → **0.25**, `AltitudeMax` 1.0 → **0.5**, and the renderer's HDR
+multiplier 2 → **1**. On the EarthLike planet that moves the shell from 22.5–45 km above
+sea level down to **11.25–22.5 km**, halving its floor, its ceiling, its thickness and its
+brightness at once.
+
+| | Before | After |
+|---|---|---|
+| Shell floor | 22.5 km | 11.25 km |
+| Shell ceiling | 45 km | 22.5 km |
+| Thickness | 22.5 km | 11.25 km |
+| Peak emission | 2.0 × Intensity | 1.0 × Intensity |
+
+From a ridge at 5 km altitude, latitude −58° (just outside the band) looking towards the
+pole. This is the view the change was really aimed at — the curtains now stand above the
+horizon with the terrain silhouetted against them, instead of sitting far overhead.
+
+![Lowered, from the ground](Screenshots/10-lowered-from-the-ground.jpg)
+
+Same orbital vantage point as the "polar arc from orbit" shot below. The arc no longer
+stands well off the limb; it now hugs the planet, which is the intended consequence of
+halving the altitude.
+
+![Lowered, from orbit](Screenshots/11-lowered-from-orbit.jpg)
+
+Same position as the "from under the shell" shot below — directly beneath the oval, now
+only ~1.2 km under the shell floor. Still bright overhead at this range, but visibly
+dimmer and more structured than the same shot at the old settings.
+
+![Lowered, from under](Screenshots/12-lowered-from-under.jpg)
+
+The screenshots in the rest of this document were taken **before** this change, at the
+original 0.5–1.0 altitude and 2× multiplier.
+
 ## What was verified
 
 | # | Check | Result |
@@ -37,6 +76,7 @@ the run and fixed; the screenshots below show both states.
 | 14 | Settings dialog shows every Plan §6 option and applies live | pass, [screenshot](Screenshots/07-settings-dialog.jpg) |
 | 15 | Config persists to `%AppData%\SpaceEngineers\Storage\Aurora.cfg` | pass |
 | 16 | No exceptions or error spam in the game / Pulsar logs | pass |
+| 17 | Altitude / thickness / brightness changes take effect as configured | pass, [see above](#lowered-aurora-current-defaults) |
 
 ## Screenshots
 

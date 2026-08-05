@@ -36,8 +36,8 @@ public class Config : INotifyPropertyChanged
     private Color topColor = new Color(140, 50, 210);
     private float latitudeCenter = 70f;
     private float latitudeWidth = 12f;
-    private float altitudeMin = 0.5f;
-    private float altitudeMax = 1.0f;
+    private float altitudeMin = 0.25f;
+    private float altitudeMax = 0.5f;
     private float animationSpeed = 1.0f;
     private bool nightOnly = true;
 

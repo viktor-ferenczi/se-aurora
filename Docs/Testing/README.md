@@ -87,6 +87,42 @@ silhouette, following the mountain contour instead of a straight geometric line:
 
 ![No cut-off](Screenshots/15-inside-shell-no-cutoff.jpg)
 
+## Periodic jump in the curtain structure
+
+Reported as the whole pattern jumping at once every 10–12 seconds, rather than drifting
+continuously. Details appearing and disappearing over time is expected; the entire
+structure teleporting is not.
+
+The animation offsets are computed on the CPU and wrapped into `[0, 1)`, which is invisible
+to a wrapped sampler **only while the offset is added at the scale it was wrapped for**.
+`uv1` satisfies that, so the curtain shape itself was continuous. But the per-column height
+and vertical offset layer was sampled at `uv1 * 0.37`, which rescales the wrap along with
+everything else: each time `ScrollOffsets.xy` rolled over from 0.999 to 0.0, that lookup
+teleported by 0.37 in texture space. Since `columnNoise.b/.a` set the height and vertical
+offset of *every* curtain column, the whole structure changed in a single frame.
+
+The periods are `1 / (rate × AnimationSpeed)` seconds — 100 s and 250 s at speed 1, so
+10 s and 25 s at the reported speed of 10, matching the observation. The other two rates
+only feed `uv2`, which is never rescaled, so those wraps were already harmless.
+
+The column layer now gets its own tiling and its own offset, wrapped at its own scale
+(`ColumnScroll` in the constant buffer). The spatial frequency and the scroll rate are
+unchanged, so the effect looks the same — it just no longer jumps.
+
+Measured from a fixed camera inside the shell (68 km, latitude −68°, `AnimationSpeed` 10),
+screenshots at ~0.52 s intervals for 42 s, scoring the mean absolute change per second
+between consecutive frames. A continuous animation gives a steady rate; a teleport is an
+isolated spike. The same build was run twice, differing only in that one line:
+
+| | median | max | max / median | isolated spikes in 42 s |
+|---|---|---|---|---|
+| Before (`uv1 * 0.37`) | 1.46 /s | 6.39 /s | **4.4×** | 2, at t = 1.5 s and 27.1 s |
+| After (`ColumnScroll`) | 1.58 /s | 2.28 /s | 1.4× | none |
+
+The two spikes are 25.6 s apart, which is the layer-1 **y** offset period at that speed
+(`1 / (0.004 × 10)` = 25 s). After the fix the largest sample is 1.4× the median and there
+is no periodic structure left in the series.
+
 ## Atmosphere gating and density scaling
 
 The aurora is limited to planets that have an atmosphere, and its brightness now follows

@@ -17,6 +17,7 @@ cbuffer AuroraConstants : register(b1)
     float4 BandParams;      // x = sin(band lower lat), y = sin(band upper lat), z = feather (sin-space), w = unused
     float4 NoiseParams;     // x = layer1 UV tiling, y = layer2 UV tiling, z = threshold, w = contrast push
     float4 ScrollOffsets;   // xy = layer1 UV offset, zw = layer2 UV offset (precomputed from time)
+    float4 ColumnScroll;    // xy = column layer UV offset, z = column layer UV tiling, w = unused
     float4 ColorIntensity;  // rgb = HDR tint, w = master intensity
     float4 StepParams;      // x = step count, y = dither strength, z = night factor, w = curtain height variation
 };
@@ -153,8 +154,11 @@ void __pixel_shader(PostprocessVertex input, out float4 output : SV_Target0)
         if (curtain <= 0)
             continue;
 
-        // Per-column curtain height and vertical offset from the extra noise channels.
-        float4 columnNoise = PerlinTex.SampleLevel(WrapSampler, uv1 * 0.37, 0);
+        // Per-column curtain height and vertical offset from the extra noise channels. The
+        // offset must come pre-scaled from the constant buffer: rescaling uv1 here would
+        // rescale the [0, 1) wrap baked into its offset, and every wrap would then jump the
+        // height of every column at once.
+        float4 columnNoise = PerlinTex.SampleLevel(WrapSampler, uvBase * ColumnScroll.z + ColumnScroll.xy, 0);
         float columnHeight = lerp(1 - heightVariation, 1, columnNoise.b);
         float columnOffset = columnNoise.a * heightVariation * 0.5;
 

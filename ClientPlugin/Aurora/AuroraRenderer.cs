@@ -26,6 +26,7 @@ public static class AuroraRenderer
         public Vector4 BandParams;      // sin(latLo), sin(latHi), feather, unused
         public Vector4 NoiseParams;     // tiling1, tiling2, threshold, push
         public Vector4 ScrollOffsets;   // layer1.xy, layer2.xy
+        public Vector4 ColumnScroll;    // column layer offset.xy, tiling.z, unused.w
         public Vector4 ColorIntensity;  // rgb tint, w intensity
         public Vector4 StepParams;      // steps, dither, night factor, height variation
     }
@@ -190,11 +191,24 @@ public static class AuroraRenderer
         const float tiling1 = 18f;
         const float tiling2 = 21f;
 
+        // The per-column height and offset layer is the same noise at a lower frequency,
+        // moving with layer 1. It gets its own tiling and offset rather than the shader
+        // rescaling layer 1's: an offset wrapped into [0, 1) is only invisible to a wrapped
+        // sampler while it is added at the scale it was wrapped for, and rescaling it makes
+        // every wrap teleport the whole curtain structure at once.
+        const float columnScale = 0.37f;
+
+        const double rateX = 0.010;
+        const double rateY = 0.004;
+
         double t = MyCommon.FrameTime.Seconds * config.AnimationSpeed;
         float Frac(double v) => (float)(v - Math.Floor(v));
         var scroll = new Vector4(
-            Frac(t * 0.010), Frac(t * 0.004),
+            Frac(t * rateX), Frac(t * rateY),
             Frac(t * -0.007), Frac(t * 0.005));
+        var columnScroll = new Vector4(
+            Frac(t * rateX * columnScale), Frac(t * rateY * columnScale),
+            tiling1 * columnScale, 0f);
 
         return new AuroraConstants
         {
@@ -205,6 +219,7 @@ public static class AuroraRenderer
             BandParams = new Vector4(sinLo, sinHi, feather, 0f),
             NoiseParams = new Vector4(tiling1, tiling2, 0.25f, 4f),
             ScrollOffsets = scroll,
+            ColumnScroll = columnScroll,
             // The shader saturates its emission to this value, so it sets how far the
             // brightest curtains reach into the game's bloom. Scaled by the planet's
             // ground level air density, which is 1.0 on an Earthlike.

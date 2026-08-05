@@ -219,10 +219,19 @@ Pixel shader outline:
 6. Multiply by night factor, output `float4(color, 1)` — blend state is additive so
    alpha is ignored.
 
-Known v1 simplifications (documented, revisit later): only the first shell segment is
-marched when the ray would cross the shell twice past the planet's limb; longitude seam
-handled by matching the noise tiling period to 2π; MSAA uses resolved depth (no
+Known v1 simplifications (documented, revisit later): MSAA uses resolved depth (no
 per-sample pass, minor edge artifacts at worst); no VR/stereo support.
+
+Two simplifications listed here originally had to be dropped during testing, because both
+produced visible artifacts rather than merely approximate ones:
+
+- *Marching only the first shell segment* left a hard edge along the inner sphere's tangent
+  whenever the camera was inside the shell, since a ray that just misses that sphere keeps
+  its whole chord while its neighbour loses the entire far-side one. Both segments are now
+  marched as one continuous arc length.
+- *Deriving the noise UV from longitude/latitude* smeared the noise into radial spokes where
+  the meridians converge at the pole. The noise is now sampled on the azimuthal
+  (tangent plane) projection, which also removes the need for a seam at ±π.
 
 ## 4. Plugin architecture (new/changed files)
 

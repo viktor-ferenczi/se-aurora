@@ -56,6 +56,37 @@ dimmer and more structured than the same shot at the old settings.
 The screenshots in the rest of this document were taken **before** this change, at the
 original 0.5–1.0 altitude and 2× multiplier.
 
+## Hard cut-off when the camera is inside the shell
+
+Reported from a mountain top at settings that put the shell down at 64.5–69 km, i.e. low
+enough to stand inside: from just **below** the shell the aurora looked right, but from
+just **inside** it the effect was chopped off along a hard straight line near the horizon.
+
+The cause was the "only the first shell segment is marched" simplification the plan listed
+under §3. The ray's intersection with a shell is the outer sphere's interval **minus** the
+inner sphere's, which leaves two disjoint segments whenever the ray dips through the hollow
+under the shell and comes back out. Marching only the first put a discontinuity along the
+inner sphere's tangent cone: a ray that just misses that sphere keeps its whole chord,
+while its neighbour a fraction of a degree lower is cut at the entry point and loses the
+entire far-side chord. The two sides differ by the whole second segment, so the seam is a
+hard edge rather than a gradient.
+
+Viewed from below the shell the camera sits inside the inner sphere, every ray takes the
+other branch, and there is nothing to cut — which is exactly why one view was fine and the
+other was not.
+
+`AuroraBorealis.hlsl` now computes both segments and walks them as one continuous arc
+length, so the marched interval — and therefore the brightness — is continuous across the
+tangent, and the step count stays fixed regardless of how the ray meets the shell. At the
+tangent the two segments meet exactly where the single segment of the neighbouring ray
+runs, so the seam disappears by construction.
+
+From inside the shell (68 km, shell 64.5–69 km) looking along the horizon, where the edge
+used to appear. The aurora now curves smoothly down and is hidden only by the terrain
+silhouette, following the mountain contour instead of a straight geometric line:
+
+![No cut-off](Screenshots/15-inside-shell-no-cutoff.jpg)
+
 ## Atmosphere gating and density scaling
 
 The aurora is limited to planets that have an atmosphere, and its brightness now follows
@@ -114,6 +145,7 @@ though the Earthlike planet is only 178 km away and well inside the plugin's ran
 | 17 | Altitude / thickness / brightness changes take effect as configured | pass, [see above](#lowered-aurora-current-defaults) |
 | 18 | Airless planets and moons get no aurora at all | pass, [screenshot](Screenshots/14-moon-no-atmosphere.jpg) |
 | 19 | Brightness scales with ground level atmosphere density, Earthlike = 1.0 | pass, [see above](#atmosphere-gating-and-density-scaling) |
+| 20 | No cut-off when the camera is inside the shell | pass, [see above](#hard-cut-off-when-the-camera-is-inside-the-shell) |
 
 ## Screenshots
 

@@ -74,52 +74,62 @@ void __pixel_shader(PostprocessVertex input, out float4 output : SV_Target0)
     float innerR = CenterInner.w;
     float outerR = PoleOuter.w;
 
-    // March segment through the shell: outer sphere minus inner sphere.
+    // The ray's intersection with the shell is the outer sphere's interval minus the inner
+    // sphere's. A ray that dips through the hollow under the shell and comes back out is
+    // left with two disjoint segments; both have to be marched. Dropping the far one puts a
+    // hard edge along the inner sphere's tangent, because a ray just missing that sphere
+    // keeps its whole chord while its neighbour is cut at the entry point.
     float2 outerT = RaySphere(0, rayDir, outerR);
     if (outerT.y <= 0)
         discard;
-    float tStart = max(outerT.x, 0);
-    float tEnd = outerT.y;
-
-    float camDist = length(CenterInner.xyz);
-    float2 innerT = RaySphere(0, rayDir, innerR);
-    if (camDist > innerR)
-    {
-        // Camera outside the inner sphere: march only up to the inner sphere (first shell segment).
-        if (innerT.x > 0)
-            tEnd = min(tEnd, innerT.x);
-    }
-    else
-    {
-        // Camera below the shell (on the ground): march from where the ray leaves the inner sphere.
-        tStart = max(tStart, innerT.y);
-    }
+    float tMin = max(outerT.x, 0);
+    float tMax = outerT.y;
 
     // Scene depth occlusion: terrain and ships cut the march short.
     float hwDepth = DepthTex[uint2(input.position.xy)];
     if (IsDepthForeground(hwDepth))
     {
         float sceneDist = length(ReconstructWorldPosition(hwDepth, uv));
-        tEnd = min(tEnd, sceneDist);
+        tMax = min(tMax, sceneDist);
+    }
+    if (tMax <= tMin)
+        discard;
+
+    float seg0Start = tMin, seg0End = tMax;
+    float seg1Start = 0, seg1End = 0;
+
+    float2 innerT = RaySphere(0, rayDir, innerR);
+    if (innerT.y > tMin && innerT.x < tMax)
+    {
+        seg0End = clamp(innerT.x, tMin, tMax);
+        seg1Start = clamp(innerT.y, tMin, tMax);
+        seg1End = tMax;
     }
 
-    if (tEnd <= tStart)
+    float len0 = max(seg0End - seg0Start, 0);
+    float len1 = max(seg1End - seg1Start, 0);
+    float marchLength = len0 + len1;
+    if (marchLength <= 0)
         discard;
 
     int steps = (int)StepParams.x;
-    float stepLen = (tEnd - tStart) / steps;
+    float stepLen = marchLength / steps;
 
     // Jitter the march start to hide banding at low step counts.
     float jitter = Hash21(input.position.xy) * StepParams.y;
-    float t = tStart + stepLen * jitter;
 
     float shellThickness = outerR - innerR;
     float heightVariation = StepParams.w;
     float3 accum = 0;
 
     [loop]
-    for (int i = 0; i < steps; i++, t += stepLen)
+    for (int i = 0; i < steps; i++)
     {
+        // Step along the two segments as one continuous arc length, so the step count and
+        // therefore the cost stay fixed no matter how the ray meets the shell.
+        float s = (i + jitter) * stepLen;
+        float t = (s < len0) ? (seg0Start + s) : (seg1Start + (s - len0));
+
         float3 p = rayDir * t - CenterInner.xyz;   // position relative to planet center
         float r = length(p);
         float3 dir = p / r;

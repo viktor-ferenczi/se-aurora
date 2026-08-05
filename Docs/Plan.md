@@ -260,8 +260,12 @@ visual plugin must never crash or spam the render loop).
   `internal`) plus `Sandbox.Game` (for `MyPlanets`). Keep the template's existing
   `DoNotPublicize` entries.
 - **References to add** (all present in `Bin64`): `SharpDX`, `SharpDX.Direct3D11`,
-  `SharpDX.DXGI`, `SharpDX.Mathematics` (needed for `ShaderMacro`, texture upload, SRVs).
-  `VRage.Render11` and `VRage.Render` are already referenced.
+  `SharpDX.DXGI` (needed for `ShaderMacro` — in the `SharpDX.Direct3D` namespace inside
+  `SharpDX.dll` — texture upload and SRVs). Note the game does **not** ship
+  `SharpDX.Mathematics.dll`; the D3D11 API surface uses the
+  `SharpDX.Mathematics.Interop.Raw*` structs that live inside `SharpDX.dll`, and all
+  CPU-side math uses `VRageMath`. `VRage.Render11` and `VRage.Render` are already
+  referenced.
 - Embed `Shaders/AuroraBorealis.hlsl` as `EmbeddedResource`.
 - `unsafe` not required if the constant-buffer struct size is obtained via
   `Marshal.SizeOf`; otherwise enable `AllowUnsafeBlocks` (the game code uses

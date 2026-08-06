@@ -8,7 +8,7 @@
     <RepoId>viktor-ferenczi/se-aurora</RepoId>
 
     <!-- The name of your plugin that will appear in the plugin list -->
-    <FriendlyName>Aurora Borealis (Northern Lights)</FriendlyName>
+    <FriendlyName>Aurora Borealis</FriendlyName>
 
     <!-- The author name that you want to appear in the plugin list -->
     <Author>Viktor</Author>
@@ -21,6 +21,10 @@
 over the poles of planets which have an atmosphere.
 
 Open the plugin's Settings for the configuration.
+        
+Original algorithm:
+https://blog.roytheunissen.com/2022/09/17/aurora-borealis-a-breakdown/
+https://github.com/RoyTheunissen/Aurora-Borealis-Unity
 	
 For support please join the Pulsar Discord: https://discord.gg/z8ZczP2YZY
 

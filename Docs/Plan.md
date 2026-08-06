@@ -293,6 +293,7 @@ Using the template's `Settings` framework (checkbox/slider/color/dropdown, persi
 | Color preset / custom colors | green→purple | bakes the gradient LUT (re-uploaded on change) |
 | Latitude band center / width | 70° / 12° | degrees, both hemispheres |
 | Altitude min / max | fitted between planet atmosphere shell bounds | relative to atmosphere thickness |
+| Pattern density | 1.0 | scales both noise tilings, and the scroll rates with them so the drift speed does not change |
 | Animation speed | 1.0 | scales scroll speeds |
 | Night only | on | scale by sun direction |
 

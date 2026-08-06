@@ -123,6 +123,26 @@ The two spikes are 25.6 s apart, which is the layer-1 **y** offset period at tha
 (`1 / (0.004 × 10)` = 25 s). After the fix the largest sample is 1.4× the median and there
 is no periodic structure left in the series.
 
+## Pattern density
+
+The curtain pattern was halved in density and the amount made configurable. Density is the
+noise tiling over the polar cap — how many curtains fit across it — so the base tilings
+went from 18/21 to **9/10.5**, and the new **Pattern density** slider scales both from
+there (default 1.0, range 0.25–4).
+
+The two layers are scaled together because their *ratio* is what makes their difference
+form thin veins rather than blobs. The scroll rates are scaled with them as well: the speed
+the pattern moves over the ground is `rate / tiling`, so leaving the rates alone would have
+made a sparser pattern drift proportionally faster.
+
+A/B at the same vantage inside the shell, taken by driving the slider through the Remote
+API without restarting — the value is read per frame, so it takes effect immediately.
+Density 2.0 reproduces the tilings the effect had before this change:
+
+| Pattern density 2.0 (previous) | Pattern density 1.0 (new default) |
+|---|---|
+| ![Density 2](Screenshots/16-pattern-density-2.jpg) | ![Density 1](Screenshots/17-pattern-density-1.jpg) |
+
 ## Atmosphere gating and density scaling
 
 The aurora is limited to planets that have an atmosphere, and its brightness now follows

@@ -186,10 +186,13 @@ public static class AuroraRenderer
         float sinHi = (float)Math.Sin(latHi);
         float feather = Math.Max((sinHi - sinLo) * 0.25f, 1e-4f);
 
-        // Noise tiling over the azimuthal projection of the polar cap. The two layers are
-        // close in scale so their difference forms thin veins rather than blobs.
-        const float tiling1 = 18f;
-        const float tiling2 = 21f;
+        // Noise tiling over the azimuthal projection of the polar cap: how many curtains
+        // fit across it. The two layers are close in scale so their difference forms thin
+        // veins rather than blobs, and their ratio sets the vein shape, so the density
+        // setting scales both together.
+        float density = Math.Max(config.PatternDensity, 0.01f);
+        float tiling1 = 9f * density;
+        float tiling2 = 10.5f * density;
 
         // The per-column height and offset layer is the same noise at a lower frequency,
         // moving with layer 1. It gets its own tiling and offset rather than the shader
@@ -198,16 +201,22 @@ public static class AuroraRenderer
         // every wrap teleport the whole curtain structure at once.
         const float columnScale = 0.37f;
 
-        const double rateX = 0.010;
-        const double rateY = 0.004;
+        // Scroll rates are in texture units per second, so the speed the pattern moves over
+        // the ground is rate / tiling. Scaling them by the same density keeps that ratio
+        // fixed, so the density setting changes the feature size without also changing how
+        // fast the curtains drift.
+        double rate1X = 0.005 * density;
+        double rate1Y = 0.002 * density;
+        double rate2X = -0.0035 * density;
+        double rate2Y = 0.0025 * density;
 
         double t = MyCommon.FrameTime.Seconds * config.AnimationSpeed;
         float Frac(double v) => (float)(v - Math.Floor(v));
         var scroll = new Vector4(
-            Frac(t * rateX), Frac(t * rateY),
-            Frac(t * -0.007), Frac(t * 0.005));
+            Frac(t * rate1X), Frac(t * rate1Y),
+            Frac(t * rate2X), Frac(t * rate2Y));
         var columnScroll = new Vector4(
-            Frac(t * rateX * columnScale), Frac(t * rateY * columnScale),
+            Frac(t * rate1X * columnScale), Frac(t * rate1Y * columnScale),
             tiling1 * columnScale, 0f);
 
         return new AuroraConstants

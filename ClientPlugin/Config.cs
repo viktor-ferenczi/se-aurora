@@ -38,6 +38,7 @@ public class Config : INotifyPropertyChanged
     private float latitudeWidth = 12f;
     private float altitudeMin = 0.25f;
     private float altitudeMax = 0.5f;
+    private float patternDensity = 1.0f;
     private float animationSpeed = 1.0f;
     private bool nightOnly = true;
 
@@ -121,6 +122,13 @@ public class Config : INotifyPropertyChanged
     {
         get => altitudeMax;
         set => SetField(ref altitudeMax, value);
+    }
+
+    [Slider(0.25f, 4f, 0.05f, SliderAttribute.SliderType.Float, description: "How many curtains fit across the polar cap; lower is sparser with larger structures")]
+    public float PatternDensity
+    {
+        get => patternDensity;
+        set => SetField(ref patternDensity, value);
     }
 
     [Separator("Animation")]

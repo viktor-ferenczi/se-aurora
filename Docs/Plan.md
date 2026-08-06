@@ -288,14 +288,14 @@ Using the template's `Settings` framework (checkbox/slider/color/dropdown, persi
 | Setting | Default | Notes |
 |---|---|---|
 | Enabled | on | master switch |
-| Intensity | 1.0 | HDR multiplier 0–4 |
-| Quality | Medium | Low/Medium/High → 24/48/96 steps |
+| Intensity | 0.25 | HDR multiplier 0–1 |
+| Quality | High | Low/Medium/High → 24/48/96 steps |
 | Color preset / custom colors | green→purple | bakes the gradient LUT (re-uploaded on change) |
-| Latitude band center / width | 70° / 12° | degrees, both hemispheres |
-| Altitude min / max | fitted between planet atmosphere shell bounds | relative to atmosphere thickness |
+| Latitude band center / width | 64° / 24° | degrees, both hemispheres; 45–85° and 4–48° |
+| Altitude min / max | 0.1 / 0.2 | fraction of the atmosphere thickness above the surface; 0–0.4 and 0.05–0.6 |
 | Pattern density | 1.0 | scales both noise tilings, and the scroll rates with them so the drift speed does not change |
-| Animation speed | 1.0 | scales scroll speeds |
-| Night only | on | scale by sun direction |
+| Animation speed | 4.0 | scales scroll speeds, 0–12 |
+| Night only | off | when on, scale by sun direction |
 
 ## 7. Implementation phases
 

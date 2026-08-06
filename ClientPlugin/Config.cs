@@ -29,18 +29,18 @@ public class Config : INotifyPropertyChanged
     #region Options
 
     private bool enabled = true;
-    private float intensity = 1.0f;
-    private AuroraQuality quality = AuroraQuality.Medium;
+    private float intensity = 0.25f;
+    private AuroraQuality quality = AuroraQuality.High;
     private AuroraColorPreset colorPreset = AuroraColorPreset.GreenPurple;
-    private Color bottomColor = new Color(30, 255, 80);
+    private Color bottomColor = new Color(30, 238, 221);
     private Color topColor = new Color(140, 50, 210);
-    private float latitudeCenter = 70f;
-    private float latitudeWidth = 12f;
-    private float altitudeMin = 0.25f;
-    private float altitudeMax = 0.5f;
+    private float latitudeCenter = 64f;
+    private float latitudeWidth = 24f;
+    private float altitudeMin = 0.1f;
+    private float altitudeMax = 0.4f;
     private float patternDensity = 1.0f;
-    private float animationSpeed = 1.0f;
-    private bool nightOnly = true;
+    private float animationSpeed = 4.0f;
+    private bool nightOnly = false;
 
     #endregion
 
@@ -57,7 +57,7 @@ public class Config : INotifyPropertyChanged
         set => SetField(ref enabled, value);
     }
 
-    [Slider(0f, 4f, 0.1f, SliderAttribute.SliderType.Float, description: "HDR brightness multiplier of the aurora")]
+    [Slider(0f, 1f, 0.01f, SliderAttribute.SliderType.Float, description: "HDR brightness multiplier of the aurora")]
     public float Intensity
     {
         get => intensity;
@@ -103,21 +103,21 @@ public class Config : INotifyPropertyChanged
         set => SetField(ref latitudeCenter, value);
     }
 
-    [Slider(4f, 30f, 1f, SliderAttribute.SliderType.Float, description: "Width of the aurora band (degrees of latitude)")]
+    [Slider(4f, 48f, 1f, SliderAttribute.SliderType.Float, description: "Width of the aurora band (degrees of latitude)")]
     public float LatitudeWidth
     {
         get => latitudeWidth;
         set => SetField(ref latitudeWidth, value);
     }
 
-    [Slider(0f, 0.9f, 0.05f, SliderAttribute.SliderType.Float, description: "Bottom of the aurora shell (0 = surface, 1 = top of atmosphere)")]
+    [Slider(0f, 1.0f, 0.01f, SliderAttribute.SliderType.Float, description: "Bottom of the aurora shell (0 = surface, 1 = top of atmosphere)")]
     public float AltitudeMin
     {
         get => altitudeMin;
         set => SetField(ref altitudeMin, value);
     }
 
-    [Slider(0.1f, 1f, 0.05f, SliderAttribute.SliderType.Float, description: "Top of the aurora shell (0 = surface, 1 = top of atmosphere)")]
+    [Slider(0.05f, 1.0f, 0.01f, SliderAttribute.SliderType.Float, description: "Top of the aurora shell (0 = surface, 1 = top of atmosphere)")]
     public float AltitudeMax
     {
         get => altitudeMax;
@@ -133,7 +133,7 @@ public class Config : INotifyPropertyChanged
 
     [Separator("Animation")]
 
-    [Slider(0f, 4f, 0.1f, SliderAttribute.SliderType.Float, description: "Speed of the curtain movement")]
+    [Slider(0f, 12f, 0.1f, SliderAttribute.SliderType.Float, description: "Speed of the curtain movement")]
     public float AnimationSpeed
     {
         get => animationSpeed;

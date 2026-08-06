@@ -6,6 +6,8 @@ For support please join the Pulsar Discord: https://discord.gg/z8ZczP2YZY
 
 Please consider supporting my work on Patreon: https://www.patreon.com/semods
 
+![Aurora Borealis](Docs/Screenshot.png)
+
 ## Prerequisites
 
 - [Space Engineers](https://store.steampowered.com/app/244850/Space_Engineers/)
@@ -13,7 +15,7 @@ Please consider supporting my work on Patreon: https://www.patreon.com/semods
 
 ## How to use
 
-Add the Aurora plugin in Pulsar's Plugins dialog.
+Enable the Aurora Borealis plugin in Pulsar's Plugins dialog.
 
 ## Functionality
 
@@ -21,3 +23,7 @@ Renders volumetric Aurora Borealis (Northern Lights)
 over the poles of planets which have an atmosphere.
 
 Open the plugin's Settings for the configuration.
+
+### Original algorithm
+- https://blog.roytheunissen.com/2022/09/17/aurora-borealis-a-breakdown/
+- https://github.com/RoyTheunissen/Aurora-Borealis-Unity

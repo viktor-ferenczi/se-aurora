@@ -134,6 +134,18 @@
       <HintPath>$(Bin64Dir)Sandbox.RenderDirect.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="SharpDX, Version=4.2.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>$(Bin64Dir)SharpDX.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="SharpDX.Direct3D11, Version=4.2.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>$(Bin64Dir)SharpDX.Direct3D11.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="SharpDX.DXGI, Version=4.2.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>$(Bin64Dir)SharpDX.DXGI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="SixLabors.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>$(Bin64Dir)SixLabors.Core.dll</HintPath>
       <Private>False</Private>
@@ -263,29 +275,29 @@
   <ItemGroup>
     <PackageReference Include="Lib.Harmony" Version="2.4.2" />
     <PackageReference Include="Mono.Cecil" Version="0.11.6" />
-    <!-- Uncomment to enable publicizer support  
     <PackageReference Include="Krafs.Publicizer" Version="2.3.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    -->
   </ItemGroup>
 
-  <!-- Uncomment to enable publicizer support
   <PropertyGroup>
     <PublicizerClearCacheOnClean>true</PublicizerClearCacheOnClean>
     <PublicizerRuntimeStrategies>Unsafe;IgnoresAccessChecksTo</PublicizerRuntimeStrategies>
     <PublicizerLogFilePath>$(MSBuildProjectDirectory)\Krafs.Publicizer.$(TargetFramework).log</PublicizerLogFilePath>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <Publicize Include="Sandbox.Game"/>
-    <Publicize Include="SpaceEngineers.Game"/>
+    <Publicize Include="VRage.Render11"/>
     <DoNotPublicize Include="Sandbox.Game:Sandbox.Game.Entities.MyEntities.OnEntityAdd"/>
     <DoNotPublicize Include="Sandbox.Game:Sandbox.Game.Entities.MyEntities.OnEntityRemove"/>
     <DoNotPublicize Include="Sandbox.Game:Sandbox.Game.Entities.MyCubeGrid.OnStaticChanged"/>
-  </ItemGroup>  
-  -->
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Shaders\AuroraBorealis.hlsl" />
+  </ItemGroup>
   <Target Name="VerifyProps" BeforeTargets="BeforeBuild">
     <Exec Condition="$([MSBuild]::IsOSPlatform('Windows'))"
           Command="call &quot;$(RepoRoot)verify_props.bat&quot; &quot;$(Bin64)&quot;" />

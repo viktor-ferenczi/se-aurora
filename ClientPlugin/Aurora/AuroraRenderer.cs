@@ -30,7 +30,7 @@ public static class AuroraRenderer
         public Vector4 ScrollOffsets;   // layer1.xy, layer2.xy
         public Vector4 ColumnScroll;    // column layer offset.xy, tiling.z, unused.w
         public Vector4 ColorIntensity;  // rgb tint, w intensity
-        public Vector4 StepParams;      // steps, dither, night factor, height variation
+        public Vector4 StepParams;      // steps, dither, fade factor (night x distance), height variation
     }
 
     private static readonly int ConstantsSize = Marshal.SizeOf(typeof(AuroraConstants));
@@ -82,15 +82,15 @@ public static class AuroraRenderer
         if (!config.Enabled)
             return;
 
-        float nightFactor = ComputeNightFactor(snap, config);
-        if (nightFactor <= 0f)
+        float fadeFactor = ComputeNightFactor(snap, config) * ComputeDistanceFade(snap);
+        if (fadeFactor <= 0f)
             return;
 
         if (!EnsureShader())
             return;
         AuroraTextures.EnsureCreated(config);
 
-        var constants = FillConstants(snap, config, nightFactor);
+        var constants = FillConstants(snap, config, fadeFactor);
 
         rc.SetScreenViewport();
         rc.SetRasterizerState(MyRasterizerStateManager.NocullRasterizerState);
@@ -179,7 +179,19 @@ public static class AuroraRenderer
         return MathHelper.Clamp((0.05f - elevation) / 0.20f, 0f, 1f);
     }
 
-    private static AuroraConstants FillConstants(AuroraSnapshot snap, Config config, float nightFactor)
+    // Computed per frame rather than in the game-thread snapshot so the fade tracks the
+    // camera smoothly instead of stepping on each snapshot update.
+    private static float ComputeDistanceFade(AuroraSnapshot snap)
+    {
+        float distance = (float)(MyRender11.Environment.Matrices.CameraPosition - snap.PlanetCenter).Length();
+        if (distance <= snap.FadeStartDistance)
+            return 1f;
+        return MathHelper.Clamp(
+            (snap.FadeEndDistance - distance) / Math.Max(snap.FadeEndDistance - snap.FadeStartDistance, 1f),
+            0f, 1f);
+    }
+
+    private static AuroraConstants FillConstants(AuroraSnapshot snap, Config config, float fadeFactor)
     {
         var centerRel = (Vector3)(snap.PlanetCenter - MyRender11.Environment.Matrices.CameraPosition);
 
@@ -242,7 +254,7 @@ public static class AuroraRenderer
             // brightest curtains reach into the game's bloom. Scaled by the planet's
             // ground level air density, which is 1.0 on an Earthlike.
             ColorIntensity = new Vector4(1f, 1f, 1f, config.Intensity * snap.DensityFactor),
-            StepParams = new Vector4(config.StepCount, 1f, nightFactor, 0.6f),
+            StepParams = new Vector4(config.StepCount, 1f, fadeFactor, 0.6f),
         };
     }
 }

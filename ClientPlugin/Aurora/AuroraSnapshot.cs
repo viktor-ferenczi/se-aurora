@@ -27,13 +27,21 @@ public sealed class AuroraSnapshot
     /// </summary>
     public readonly float DensityFactor;
 
+    /// <summary>Camera distance from the planet center (meters) where the fade-out begins.</summary>
+    public readonly float FadeStartDistance;
+
+    /// <summary>Camera distance from the planet center (meters) where the aurora is fully faded out.</summary>
+    public readonly float FadeEndDistance;
+
     public AuroraSnapshot(Vector3D planetCenter, float innerRadius, float outerRadius, Vector3 poleAxis,
-        float densityFactor)
+        float densityFactor, float fadeStartDistance, float fadeEndDistance)
     {
         PlanetCenter = planetCenter;
         InnerRadius = innerRadius;
         OuterRadius = outerRadius;
         PoleAxis = poleAxis;
         DensityFactor = densityFactor;
+        FadeStartDistance = fadeStartDistance;
+        FadeEndDistance = fadeEndDistance;
     }
 }

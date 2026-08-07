@@ -1,3 +1,4 @@
+using System;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Planet;
 using Sandbox.Game.World;
@@ -16,9 +17,11 @@ public static class AuroraSampler
     // Update every half second of simulation; planets do not move.
     private const int UpdateInterval = 30;
 
-    // Range gating with hysteresis to avoid flickering at the boundary (relative to atmosphere radius).
-    private const double EnterRangeFactor = 12.0;
-    private const double ExitRangeFactor = 13.0;
+    // Extra margin past the configured fade end for leaving the active state, so the
+    // snapshot gating does not churn at the boundary (relative to atmosphere radius).
+    // Since the effect fades to zero brightness at the fade end distance, the snapshot
+    // appearing or disappearing there is invisible.
+    private const double ExitRangeMargin = 2.0;
 
     // Ground level air density of the vanilla EarthLike generator, the reference for the
     // brightness scale. MyPlanetAtmosphere.Density also defaults to this when a planet
@@ -85,9 +88,15 @@ public static class AuroraSampler
             return null;
         }
 
+        // Distance fade: full brightness out to the start factor, then a linear fade to
+        // zero at the end factor (applied per-frame on the render thread; here they only
+        // gate the snapshot). The end factor is clamped so it never sits below the start.
+        double fadeStartFactor = config.FadeStartFactor;
+        double fadeEndFactor = Math.Max(config.FadeEndFactor, fadeStartFactor);
+
         var center = planet.PositionComp.GetPosition();
         double distance = (cameraPosition - center).Length();
-        double range = planet.AtmosphereRadius * (active ? ExitRangeFactor : EnterRangeFactor);
+        double range = planet.AtmosphereRadius * (fadeEndFactor + (active ? ExitRangeMargin : 0.0));
         if (distance > range)
         {
             active = false;
@@ -121,6 +130,9 @@ public static class AuroraSampler
         LogPlanet(planet, $"air density {groundDensity:0.###} -> brightness x{densityFactor:0.###}, " +
                           $"shell {inner / 1000f:0.#}-{outer / 1000f:0.#} km");
 
-        return new AuroraSnapshot(center, inner, outer, pole, densityFactor);
+        float fadeStart = (float)(planet.AtmosphereRadius * fadeStartFactor);
+        float fadeEnd = (float)(planet.AtmosphereRadius * fadeEndFactor);
+
+        return new AuroraSnapshot(center, inner, outer, pole, densityFactor, fadeStart, fadeEnd);
     }
 }

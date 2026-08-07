@@ -1,5 +1,7 @@
 using System;
+using System.IO;
 using System.Runtime.InteropServices;
+using VRage.FileSystem;
 using VRage.Render11.RenderContext;
 using VRage.Render11.Resources;
 using VRage.Utils;
@@ -140,9 +142,16 @@ public static class AuroraRenderer
 
             try
             {
+                // Compile a flattened copy with all game includes inlined: the include
+                // handler callback is broken in the Linux build of the D3D compiler.
+                var directory = Path.Combine(MyFileSystem.UserDataPath, "Storage", Plugin.Name);
+                Directory.CreateDirectory(directory);
+                var flattenedPath = Path.Combine(directory, "AuroraBorealis.flat.hlsl");
+                ShaderFlattener.Flatten(path, flattenedPath);
+
                 // The game's registry compiles at ps_5_0 with entry point __pixel_shader,
                 // caches the bytecode and restores the shader after device resets.
-                pixelShader = MyPixelShaders.Create(path);
+                pixelShader = MyPixelShaders.Create(flattenedPath);
             }
             catch (Exception e)
             {

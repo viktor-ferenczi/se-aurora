@@ -42,7 +42,7 @@ public class Config : INotifyPropertyChanged
     private float fadeStartFactor = 48f;
     private float fadeEndFactor = 72f;
     private float animationSpeed = 4.0f;
-    private bool nightOnly = false;
+    private bool nightOnly = true;
 
     #endregion
 

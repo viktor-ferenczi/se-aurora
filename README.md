@@ -27,3 +27,15 @@ Open the plugin's Settings for the configuration.
 ### Original algorithm
 - https://blog.roytheunissen.com/2022/09/17/aurora-borealis-a-breakdown/
 - https://github.com/RoyTheunissen/Aurora-Borealis-Unity
+
+## Screenshots
+
+Made with the realistic Milky Way skybox.
+
+The night is so much more alive!
+
+![Night](Docs/Night.png)
+
+![With planet](Docs/WithPlanet.png)
+
+![From space](Docs/FromSpace.png)

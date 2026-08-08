@@ -191,11 +191,31 @@ public static class AuroraRenderer
             0f, 1f);
     }
 
+    // The magnetic axis is the rotation axis tilted away from the sun, so the aurora band
+    // shifts toward the night side where it is actually visible. Tied to the sun rather
+    // than the planet frame because a fixed tilt direction would favor the day side just
+    // as often; the sun moves slowly enough that the drift is imperceptible.
+    private static Vector3 ComputeMagneticAxis(Vector3 pole, float tiltDegrees)
+    {
+        if (tiltDegrees <= 0f)
+            return pole;
+
+        var dirToSun = -MyRender11.Environment.Data.EnvironmentLight.SunLightDirection;
+        var sunPerp = dirToSun - pole * pole.Dot(dirToSun);
+        float length = sunPerp.Length();
+        if (length < 1e-3f)
+            return pole;
+        sunPerp /= length;
+
+        float tilt = MathHelper.ToRadians(tiltDegrees);
+        return pole * (float)Math.Cos(tilt) - sunPerp * (float)Math.Sin(tilt);
+    }
+
     private static AuroraConstants FillConstants(AuroraSnapshot snap, Config config, float fadeFactor)
     {
         var centerRel = (Vector3)(snap.PlanetCenter - MyRender11.Environment.Matrices.CameraPosition);
 
-        var pole = snap.PoleAxis;
+        var pole = ComputeMagneticAxis(snap.PoleAxis, config.MagneticAxisTilt);
         var reference = Math.Abs(pole.X) < 0.9f ? Vector3.UnitX : Vector3.UnitY;
         var tangent1 = Vector3.Normalize(Vector3.Cross(pole, reference));
         var tangent2 = Vector3.Cross(pole, tangent1);

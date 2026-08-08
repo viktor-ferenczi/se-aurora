@@ -36,9 +36,10 @@ public class Config : INotifyPropertyChanged
     private Color topColor = new Color(140, 50, 210);
     private float latitudeCenter = 64f;
     private float latitudeWidth = 24f;
-    private float altitudeMin = 0.1f;
-    private float altitudeMax = 0.4f;
-    private float patternDensity = 1.0f;
+    private float magneticAxisTilt = 25f;
+    private float altitudeMin = 0.05f;
+    private float altitudeMax = 0.2f;
+    private float patternDensity = 0.5f;
     private float fadeStartFactor = 12f;
     private float fadeEndFactor = 16f;
     private float animationSpeed = 4.0f;
@@ -110,6 +111,13 @@ public class Config : INotifyPropertyChanged
     {
         get => latitudeWidth;
         set => SetField(ref latitudeWidth, value);
+    }
+
+    [Slider(0f, 45f, 1f, SliderAttribute.SliderType.Float, description: "Tilt of the magnetic axis from the rotation axis (degrees); tilted away from the sun, shifting the aurora toward the night side")]
+    public float MagneticAxisTilt
+    {
+        get => magneticAxisTilt;
+        set => SetField(ref magneticAxisTilt, value);
     }
 
     [Slider(0f, 1.0f, 0.01f, SliderAttribute.SliderType.Float, description: "Bottom of the aurora shell (0 = surface, 1 = top of atmosphere)")]

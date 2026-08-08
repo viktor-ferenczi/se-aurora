@@ -30,7 +30,7 @@ public class Config : INotifyPropertyChanged
 
     private bool enabled = true;
     private float intensity = 0.25f;
-    private float groundLight = 0.25f;
+    private float groundLight = 0.15f;
     private AuroraQuality quality = AuroraQuality.High;
     private AuroraColorPreset colorPreset = AuroraColorPreset.GreenPurple;
     private Color bottomColor = new Color(30, 238, 221);
@@ -41,7 +41,7 @@ public class Config : INotifyPropertyChanged
     private float altitudeMin = 0.05f;
     private float altitudeMax = 0.2f;
     private float patternDensity = 0.5f;
-    private float coverage = 0.6f;
+    private float coverage = 0.3f;
     private float fadeStartFactor = 12f;
     private float fadeEndFactor = 16f;
     private float animationSpeed = 4.0f;

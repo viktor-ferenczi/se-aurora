@@ -31,6 +31,8 @@ public static class AuroraRenderer
         public Vector4 ColumnScroll;    // column layer offset.xy, tiling.z, unused.w
         public Vector4 ColorIntensity;  // rgb tint, w intensity
         public Vector4 StepParams;      // steps, dither, fade factor (night x distance), height variation
+        public Vector4 PatchScroll;     // patch layer1 offset.xy, patch layer2 offset.zw
+        public Vector4 PatchParams;     // patch tiling1, patch tiling2, threshold, feather
     }
 
     private static readonly int ConstantsSize = Marshal.SizeOf(typeof(AuroraConstants));
@@ -260,6 +262,21 @@ public static class AuroraRenderer
             Frac(t * rate1X * columnScale), Frac(t * rate1Y * columnScale),
             tiling1 * columnScale, 0f);
 
+        // Structural visibility patches: macro-scale noise gates which parts of the band
+        // are lit at any moment. The tiling is fixed rather than following the curtain
+        // density, because these are the largest structures: a few patches across the
+        // whole polar cap. The layers counter-scroll so the lit areas morph in place.
+        const float patchTiling1 = 1.1f;
+        const float patchTiling2 = 0.9f;
+        const float patchFeather = 0.12f;
+        float coverage = MathHelper.Clamp(config.Coverage, 0f, 1f);
+        // Maps coverage 1 to a threshold below virtually all noise values (fully lit)
+        // and low coverage to one only the highest peaks exceed (sparse patches).
+        float patchThreshold = 0.9f - 0.8f * coverage;
+        var patchScroll = new Vector4(
+            Frac(t * 0.0016), Frac(t * -0.0007),
+            Frac(t * -0.0011), Frac(t * 0.0009));
+
         return new AuroraConstants
         {
             CenterInner = new Vector4(centerRel, snap.InnerRadius),
@@ -275,6 +292,8 @@ public static class AuroraRenderer
             // ground level air density, which is 1.0 on an Earthlike.
             ColorIntensity = new Vector4(1f, 1f, 1f, config.Intensity * snap.DensityFactor),
             StepParams = new Vector4(config.StepCount, 1f, fadeFactor, 0.6f),
+            PatchScroll = patchScroll,
+            PatchParams = new Vector4(patchTiling1, patchTiling2, patchThreshold, patchFeather),
         };
     }
 }

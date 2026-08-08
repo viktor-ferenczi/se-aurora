@@ -20,6 +20,8 @@ cbuffer AuroraConstants : register(b1)
     float4 ColumnScroll;    // xy = column layer UV offset, z = column layer UV tiling, w = unused
     float4 ColorIntensity;  // rgb = HDR tint, w = master intensity
     float4 StepParams;      // x = step count, y = dither strength, z = night factor, w = curtain height variation
+    float4 PatchScroll;     // xy = patch layer1 UV offset, zw = patch layer2 UV offset
+    float4 PatchParams;     // x = patch layer1 UV tiling, y = patch layer2 UV tiling, z = threshold, w = feather
 };
 
 Texture2D<float4> PerlinTex : register(t20);   // R/G: difference-cloud layers, B: curtain height, A: vertical offset
@@ -50,6 +52,16 @@ float CurtainNoise(float2 uv1, float2 uv2)
     float noise = abs(a - b);
     noise = (noise - NoiseParams.z) * NoiseParams.w + NoiseParams.z;
     return 1 - saturate(noise);
+}
+
+// Structural visibility: only parts of the aurora are lit at any one time. Two slowly
+// counter-scrolling macro-scale noise layers gate the emission, so lit patches grow,
+// split and vanish in place instead of just drifting along with the curtains.
+float PatchMask(float2 uvBase)
+{
+    float a = PerlinTex.SampleLevel(WrapSampler, uvBase * PatchParams.x + PatchScroll.xy, 0).r;
+    float b = PerlinTex.SampleLevel(WrapSampler, uvBase * PatchParams.y + PatchScroll.zw, 0).g;
+    return smoothstep(PatchParams.z - PatchParams.w, PatchParams.z + PatchParams.w, (a + b) * 0.5);
 }
 
 // Cheap screen-space hash for march-start dithering.
@@ -150,6 +162,10 @@ void __pixel_shader(PostprocessVertex input, out float4 output : SV_Target0)
         float2 uv1 = uvBase * NoiseParams.x + ScrollOffsets.xy;
         float2 uv2 = uvBase * NoiseParams.y + ScrollOffsets.zw;
 
+        float patchMask = PatchMask(uvBase);
+        if (patchMask <= 0)
+            continue;
+
         float curtain = CurtainNoise(uv1, uv2);
         if (curtain <= 0)
             continue;
@@ -169,7 +185,7 @@ void __pixel_shader(PostprocessVertex input, out float4 output : SV_Target0)
             continue;
 
         float4 ramp = ColorRamp.SampleLevel(ClampSampler, float2(hRemapped, 0.5), 0);
-        accum += ramp.rgb * (ramp.a * curtain * curtain * bandMask);
+        accum += ramp.rgb * (ramp.a * curtain * curtain * bandMask * patchMask);
     }
 
     // Accumulated emission per unit of shell thickness. A ray crossing the shell near the

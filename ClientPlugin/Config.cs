@@ -40,6 +40,7 @@ public class Config : INotifyPropertyChanged
     private float altitudeMin = 0.05f;
     private float altitudeMax = 0.2f;
     private float patternDensity = 0.5f;
+    private float coverage = 0.6f;
     private float fadeStartFactor = 12f;
     private float fadeEndFactor = 16f;
     private float animationSpeed = 4.0f;
@@ -139,6 +140,13 @@ public class Config : INotifyPropertyChanged
     {
         get => patternDensity;
         set => SetField(ref patternDensity, value);
+    }
+
+    [Slider(0.05f, 1f, 0.01f, SliderAttribute.SliderType.Float, description: "Fraction of the aurora lit at any one time; lower makes patches flicker in and out at the largest scale")]
+    public float Coverage
+    {
+        get => coverage;
+        set => SetField(ref coverage, value);
     }
 
     [Slider(1f, 100f, 0.1f, SliderAttribute.SliderType.Float, description: "Distance from the planet where the aurora starts to fade out (multiple of the atmosphere radius)")]

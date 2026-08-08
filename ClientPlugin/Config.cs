@@ -30,15 +30,18 @@ public class Config : INotifyPropertyChanged
 
     private bool enabled = true;
     private float intensity = 0.25f;
+    private float groundLight = 0.15f;
     private AuroraQuality quality = AuroraQuality.High;
     private AuroraColorPreset colorPreset = AuroraColorPreset.GreenPurple;
     private Color bottomColor = new Color(30, 238, 221);
     private Color topColor = new Color(140, 50, 210);
     private float latitudeCenter = 64f;
     private float latitudeWidth = 24f;
-    private float altitudeMin = 0.1f;
-    private float altitudeMax = 0.4f;
+    private float magneticAxisTilt = 25f;
+    private float altitudeMin = 0.05f;
+    private float altitudeMax = 0.2f;
     private float patternDensity = 1.0f;
+    private float coverage = 0.3f;
     private float fadeStartFactor = 12f;
     private float fadeEndFactor = 16f;
     private float animationSpeed = 4.0f;
@@ -64,6 +67,13 @@ public class Config : INotifyPropertyChanged
     {
         get => intensity;
         set => SetField(ref intensity, value);
+    }
+
+    [Slider(0f, 1f, 0.01f, SliderAttribute.SliderType.Float, description: "Aurora light tinting the terrain below (ambient glow, most visible on snow)")]
+    public float GroundLight
+    {
+        get => groundLight;
+        set => SetField(ref groundLight, value);
     }
 
     [Dropdown(description: "Raymarching quality (number of volume samples per pixel)")]
@@ -112,6 +122,13 @@ public class Config : INotifyPropertyChanged
         set => SetField(ref latitudeWidth, value);
     }
 
+    [Slider(0f, 45f, 1f, SliderAttribute.SliderType.Float, description: "Tilt of the magnetic axis from the rotation axis (degrees); tilted away from the sun, shifting the aurora toward the night side")]
+    public float MagneticAxisTilt
+    {
+        get => magneticAxisTilt;
+        set => SetField(ref magneticAxisTilt, value);
+    }
+
     [Slider(0f, 1.0f, 0.01f, SliderAttribute.SliderType.Float, description: "Bottom of the aurora shell (0 = surface, 1 = top of atmosphere)")]
     public float AltitudeMin
     {
@@ -131,6 +148,13 @@ public class Config : INotifyPropertyChanged
     {
         get => patternDensity;
         set => SetField(ref patternDensity, value);
+    }
+
+    [Slider(0.05f, 1f, 0.01f, SliderAttribute.SliderType.Float, description: "Fraction of the aurora lit at any one time; lower makes patches flicker in and out at the largest scale")]
+    public float Coverage
+    {
+        get => coverage;
+        set => SetField(ref coverage, value);
     }
 
     [Slider(1f, 100f, 0.1f, SliderAttribute.SliderType.Float, description: "Distance from the planet where the aurora starts to fade out (multiple of the atmosphere radius)")]

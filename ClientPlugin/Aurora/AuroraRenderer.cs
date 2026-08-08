@@ -31,6 +31,9 @@ public static class AuroraRenderer
         public Vector4 ColumnScroll;    // column layer offset.xy, tiling.z, unused.w
         public Vector4 ColorIntensity;  // rgb tint, w intensity
         public Vector4 StepParams;      // steps, dither, fade factor (night x distance), height variation
+        public Vector4 PatchScroll;     // patch layer1 offset.xy, patch layer2 offset.zw
+        public Vector4 PatchParams;     // patch tiling1, patch tiling2, threshold, feather
+        public Vector4 GroundParams;    // ground light intensity, unused x3
     }
 
     private static readonly int ConstantsSize = Marshal.SizeOf(typeof(AuroraConstants));
@@ -108,6 +111,9 @@ public static class AuroraRenderer
         rc.PixelShader.SetSrv(20, AuroraTextures.Noise);
         rc.PixelShader.SetSrv(21, AuroraTextures.Ramp);
         rc.PixelShader.SetSrv(22, MyGBuffer.Main.ResolvedDepthStencil.SrvDepth);
+        rc.PixelShader.SetSrv(23, MyGBuffer.Main.GBuffer0);
+        rc.PixelShader.SetSrv(24, MyGBuffer.Main.GBuffer1);
+        rc.PixelShader.SetSrv(25, MyGBuffer.Main.GBuffer2);
         rc.PixelShader.SetSampler(6, MySamplerStateManager.CloudSampler);
         rc.PixelShader.SetSampler(7, MySamplerStateManager.Default);
 
@@ -116,6 +122,9 @@ public static class AuroraRenderer
         rc.PixelShader.SetSrv(20, null);
         rc.PixelShader.SetSrv(21, null);
         rc.PixelShader.SetSrv(22, null);
+        rc.PixelShader.SetSrv(23, null);
+        rc.PixelShader.SetSrv(24, null);
+        rc.PixelShader.SetSrv(25, null);
         rc.SetDepthStencilState(null);
         rc.SetBlendState(null);
         rc.SetRasterizerState(null);
@@ -191,11 +200,31 @@ public static class AuroraRenderer
             0f, 1f);
     }
 
+    // The magnetic axis is the rotation axis tilted away from the sun, so the aurora band
+    // shifts toward the night side where it is actually visible. Tied to the sun rather
+    // than the planet frame because a fixed tilt direction would favor the day side just
+    // as often; the sun moves slowly enough that the drift is imperceptible.
+    private static Vector3 ComputeMagneticAxis(Vector3 pole, float tiltDegrees)
+    {
+        if (tiltDegrees <= 0f)
+            return pole;
+
+        var dirToSun = -MyRender11.Environment.Data.EnvironmentLight.SunLightDirection;
+        var sunPerp = dirToSun - pole * pole.Dot(dirToSun);
+        float length = sunPerp.Length();
+        if (length < 1e-3f)
+            return pole;
+        sunPerp /= length;
+
+        float tilt = MathHelper.ToRadians(tiltDegrees);
+        return pole * (float)Math.Cos(tilt) - sunPerp * (float)Math.Sin(tilt);
+    }
+
     private static AuroraConstants FillConstants(AuroraSnapshot snap, Config config, float fadeFactor)
     {
         var centerRel = (Vector3)(snap.PlanetCenter - MyRender11.Environment.Matrices.CameraPosition);
 
-        var pole = snap.PoleAxis;
+        var pole = ComputeMagneticAxis(snap.PoleAxis, config.MagneticAxisTilt);
         var reference = Math.Abs(pole.X) < 0.9f ? Vector3.UnitX : Vector3.UnitY;
         var tangent1 = Vector3.Normalize(Vector3.Cross(pole, reference));
         var tangent2 = Vector3.Cross(pole, tangent1);
@@ -240,6 +269,21 @@ public static class AuroraRenderer
             Frac(t * rate1X * columnScale), Frac(t * rate1Y * columnScale),
             tiling1 * columnScale, 0f);
 
+        // Structural visibility patches: macro-scale noise gates which parts of the band
+        // are lit at any moment. The tiling is fixed rather than following the curtain
+        // density, because these are the largest structures: a few patches across the
+        // whole polar cap. The layers counter-scroll so the lit areas morph in place.
+        const float patchTiling1 = 1.1f;
+        const float patchTiling2 = 0.9f;
+        const float patchFeather = 0.12f;
+        float coverage = MathHelper.Clamp(config.Coverage, 0f, 1f);
+        // Maps coverage 1 to a threshold below virtually all noise values (fully lit)
+        // and low coverage to one only the highest peaks exceed (sparse patches).
+        float patchThreshold = 0.9f - 0.8f * coverage;
+        var patchScroll = new Vector4(
+            Frac(t * 0.0016), Frac(t * -0.0007),
+            Frac(t * -0.0011), Frac(t * 0.0009));
+
         return new AuroraConstants
         {
             CenterInner = new Vector4(centerRel, snap.InnerRadius),
@@ -255,6 +299,9 @@ public static class AuroraRenderer
             // ground level air density, which is 1.0 on an Earthlike.
             ColorIntensity = new Vector4(1f, 1f, 1f, config.Intensity * snap.DensityFactor),
             StepParams = new Vector4(config.StepCount, 1f, fadeFactor, 0.6f),
+            PatchScroll = patchScroll,
+            PatchParams = new Vector4(patchTiling1, patchTiling2, patchThreshold, patchFeather),
+            GroundParams = new Vector4(config.GroundLight, 0f, 0f, 0f),
         };
     }
 }

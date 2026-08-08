@@ -40,7 +40,7 @@ public class Config : INotifyPropertyChanged
     private float magneticAxisTilt = 25f;
     private float altitudeMin = 0.05f;
     private float altitudeMax = 0.2f;
-    private float patternDensity = 0.5f;
+    private float patternDensity = 1.0f;
     private float coverage = 0.3f;
     private float fadeStartFactor = 12f;
     private float fadeEndFactor = 16f;

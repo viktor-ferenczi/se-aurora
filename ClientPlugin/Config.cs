@@ -38,7 +38,7 @@ public class Config : INotifyPropertyChanged
     private float latitudeCenter = 64f;
     private float latitudeWidth = 24f;
     private float magneticAxisTilt = 25f;
-    private float altitudeMin = 0.05f;
+    private float altitudeMin = 0.1f;
     private float altitudeMax = 0.2f;
     private float patternDensity = 1.0f;
     private float coverage = 0.3f;

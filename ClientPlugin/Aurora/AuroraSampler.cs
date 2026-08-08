@@ -72,18 +72,28 @@ public static class AuroraSampler
             return null;
         }
 
+        // Nearest planet WITH an atmosphere: airless planets and moons never get an aurora,
+        // so they must not be able to steal the selection either. GetClosestPlanet would
+        // switch to a closer airless moon and shut the effect off while the atmospheric
+        // planet behind it is still well within range.
         var cameraPosition = MySector.MainCamera.Position;
-        var planet = MyPlanets.Static.GetClosestPlanet(cameraPosition);
-        if (planet == null || planet.Closed)
+        MyPlanet planet = null;
+        double planetDistance = double.MaxValue;
+        foreach (var candidate in MyPlanets.GetPlanets())
         {
-            active = false;
-            return null;
+            if (candidate == null || candidate.Closed)
+                continue;
+            if (!candidate.HasAtmosphere || candidate.AtmosphereRadius <= 0f)
+                continue;
+            double candidateDistance = (cameraPosition - candidate.PositionComp.GetPosition()).Length();
+            if (candidateDistance < planetDistance)
+            {
+                planetDistance = candidateDistance;
+                planet = candidate;
+            }
         }
-
-        // Only planets with an atmosphere get an aurora; airless planets and moons are out.
-        if (!planet.HasAtmosphere || planet.AtmosphereRadius <= 0f)
+        if (planet == null)
         {
-            LogPlanet(planet, "no atmosphere, aurora disabled");
             active = false;
             return null;
         }
@@ -95,9 +105,8 @@ public static class AuroraSampler
         double fadeEndFactor = Math.Max(config.FadeEndFactor, fadeStartFactor);
 
         var center = planet.PositionComp.GetPosition();
-        double distance = (cameraPosition - center).Length();
         double range = planet.AtmosphereRadius * (fadeEndFactor + (active ? ExitRangeMargin : 0.0));
-        if (distance > range)
+        if (planetDistance > range)
         {
             active = false;
             return null;

@@ -33,6 +33,7 @@ public static class AuroraRenderer
         public Vector4 StepParams;      // steps, dither, fade factor (night x distance), height variation
         public Vector4 PatchScroll;     // patch layer1 offset.xy, patch layer2 offset.zw
         public Vector4 PatchParams;     // patch tiling1, patch tiling2, threshold, feather
+        public Vector4 GroundParams;    // ground light intensity, unused x3
     }
 
     private static readonly int ConstantsSize = Marshal.SizeOf(typeof(AuroraConstants));
@@ -110,6 +111,9 @@ public static class AuroraRenderer
         rc.PixelShader.SetSrv(20, AuroraTextures.Noise);
         rc.PixelShader.SetSrv(21, AuroraTextures.Ramp);
         rc.PixelShader.SetSrv(22, MyGBuffer.Main.ResolvedDepthStencil.SrvDepth);
+        rc.PixelShader.SetSrv(23, MyGBuffer.Main.GBuffer0);
+        rc.PixelShader.SetSrv(24, MyGBuffer.Main.GBuffer1);
+        rc.PixelShader.SetSrv(25, MyGBuffer.Main.GBuffer2);
         rc.PixelShader.SetSampler(6, MySamplerStateManager.CloudSampler);
         rc.PixelShader.SetSampler(7, MySamplerStateManager.Default);
 
@@ -118,6 +122,9 @@ public static class AuroraRenderer
         rc.PixelShader.SetSrv(20, null);
         rc.PixelShader.SetSrv(21, null);
         rc.PixelShader.SetSrv(22, null);
+        rc.PixelShader.SetSrv(23, null);
+        rc.PixelShader.SetSrv(24, null);
+        rc.PixelShader.SetSrv(25, null);
         rc.SetDepthStencilState(null);
         rc.SetBlendState(null);
         rc.SetRasterizerState(null);
@@ -294,6 +301,7 @@ public static class AuroraRenderer
             StepParams = new Vector4(config.StepCount, 1f, fadeFactor, 0.6f),
             PatchScroll = patchScroll,
             PatchParams = new Vector4(patchTiling1, patchTiling2, patchThreshold, patchFeather),
+            GroundParams = new Vector4(config.GroundLight, 0f, 0f, 0f),
         };
     }
 }

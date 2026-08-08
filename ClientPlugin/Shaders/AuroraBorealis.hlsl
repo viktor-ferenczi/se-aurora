@@ -22,11 +22,15 @@ cbuffer AuroraConstants : register(b1)
     float4 StepParams;      // x = step count, y = dither strength, z = night factor, w = curtain height variation
     float4 PatchScroll;     // xy = patch layer1 UV offset, zw = patch layer2 UV offset
     float4 PatchParams;     // x = patch layer1 UV tiling, y = patch layer2 UV tiling, z = threshold, w = feather
+    float4 GroundParams;    // x = ground light intensity, yzw = unused
 };
 
 Texture2D<float4> PerlinTex : register(t20);   // R/G: difference-cloud layers, B: curtain height, A: vertical offset
 Texture2D<float4> ColorRamp : register(t21);   // 256x1 vertical gradient LUT (rgb = color, a = height falloff)
 Texture2D<float>  DepthTex  : register(t22);   // resolved scene depth for occlusion
+Texture2D<float4> Gbuffer0Tex : register(t23); // rgb = base color (for the ground light pass)
+Texture2D<float4> Gbuffer1Tex : register(t24); // xy = packed view-space normal
+Texture2D<float4> Gbuffer2Tex : register(t25); // r = metalness
 
 SamplerState WrapSampler  : register(s6);
 SamplerState ClampSampler : register(s7);
@@ -52,6 +56,27 @@ float CurtainNoise(float2 uv1, float2 uv2)
     float noise = abs(a - b);
     noise = (noise - NoiseParams.z) * NoiseParams.w + NoiseParams.z;
     return 1 - saturate(noise);
+}
+
+// Latitude band mask (both hemispheres); takes abs(sin(latitude)).
+float BandMask(float sinLat)
+{
+    float feather = BandParams.z;
+    return smoothstep(BandParams.x - feather, BandParams.x + feather, sinLat)
+         * (1 - smoothstep(BandParams.y - feather, BandParams.y + feather, sinLat));
+}
+
+// G-buffer normal decode, verbatim unpack_normals2 from VertexTransformations.hlsli
+// (inlined: the game's gbuffer include drags in texture bindings this pass replaces).
+float3 UnpackGbufferNormal(float2 enc)
+{
+    float2 fenc = enc * 4 - 2;
+    float f = dot(fenc, fenc);
+    float g = sqrt(1 - f / 4);
+    float3 n;
+    n.xy = fenc * g;
+    n.z = 1 - f / 2;
+    return n;
 }
 
 // Structural visibility: only parts of the aurora are lit at any one time. Two slowly
@@ -105,8 +130,48 @@ void __pixel_shader(PostprocessVertex input, out float4 output : SV_Target0)
         float sceneDist = length(ReconstructWorldPosition(hwDepth, uv));
         tMax = min(tMax, sceneDist);
     }
+    // Ambient ground light: aurora-tinted light painted onto the terrain below the
+    // shell, following the glow overhead. Approximated as hemispherical sky light
+    // modulated by the G-buffer albedo, so bright surfaces (snow) pick up most of it.
+    // Computed before the march early-outs because a ground pixel under the shell
+    // usually leaves no shell segment to march and must still receive its light.
+    float3 ground = 0;
+    if (GroundParams.x > 0 && IsDepthForeground(hwDepth))
+    {
+        float3 q = ReconstructWorldPosition(hwDepth, uv) - CenterInner.xyz;
+        float rq = length(q);
+        if (rq < innerR)
+        {
+            float3 up = q / rq;
+            float glow = BandMask(abs(dot(up, PoleOuter.xyz)));
+            if (glow > 0)
+            {
+                float2 uvGround = float2(dot(up, Tangent1.xyz), dot(up, Tangent2.xyz));
+                // The curtain pattern is left unsquared: the ground sees the whole sky
+                // dome, so its light is softer than the curtains themselves.
+                glow *= PatchMask(uvGround);
+                glow *= CurtainNoise(uvGround * NoiseParams.x + ScrollOffsets.xy,
+                                     uvGround * NoiseParams.y + ScrollOffsets.zw);
+            }
+            if (glow > 0)
+            {
+                uint2 pixel = uint2(input.position.xy);
+                float3 albedo = Gbuffer0Tex[pixel].rgb * (1 - Gbuffer2Tex[pixel].r);
+                float3 normal = view_to_world(UnpackGbufferNormal(Gbuffer1Tex[pixel].xy));
+                // Hemispherical sky visibility: level ground gets the full glow,
+                // slopes get less, faces pointing away from the sky get none.
+                float skyVisibility = saturate(dot(normal, up) * 0.5 + 0.5);
+                float3 glowColor = ColorRamp.SampleLevel(ClampSampler, float2(0.15, 0.5), 0).rgb;
+                ground = albedo * glowColor * (glow * skyVisibility * GroundParams.x);
+            }
+        }
+    }
+
     if (tMax <= tMin)
-        discard;
+    {
+        output = float4(ground * intensity, 1);
+        return;
+    }
 
     float seg0Start = tMin, seg0End = tMax;
     float seg1Start = 0, seg1End = 0;
@@ -123,7 +188,10 @@ void __pixel_shader(PostprocessVertex input, out float4 output : SV_Target0)
     float len1 = max(seg1End - seg1Start, 0);
     float marchLength = len0 + len1;
     if (marchLength <= 0)
-        discard;
+    {
+        output = float4(ground * intensity, 1);
+        return;
+    }
 
     int steps = (int)StepParams.x;
     float stepLen = marchLength / steps;
@@ -147,11 +215,7 @@ void __pixel_shader(PostprocessVertex input, out float4 output : SV_Target0)
         float r = length(p);
         float3 dir = p / r;
 
-        // Latitude band mask (both hemispheres).
-        float sinLat = abs(dot(dir, PoleOuter.xyz));
-        float feather = BandParams.z;
-        float bandMask = smoothstep(BandParams.x - feather, BandParams.x + feather, sinLat)
-                       * (1 - smoothstep(BandParams.y - feather, BandParams.y + feather, sinLat));
+        float bandMask = BandMask(abs(dot(dir, PoleOuter.xyz)));
         if (bandMask <= 0)
             continue;
 
@@ -194,5 +258,5 @@ void __pixel_shader(PostprocessVertex input, out float4 output : SV_Target0)
     // of flooding the sky when the camera sits under the shell.
     float3 optical = accum * (stepLen / shellThickness);
     float3 color = ColorIntensity.rgb * intensity * (1 - exp(-optical));
-    output = float4(color, 1);   // additive blend; alpha is ignored
+    output = float4(color + ground * intensity, 1);   // additive blend; alpha is ignored
 }

@@ -30,6 +30,7 @@ public class Config : INotifyPropertyChanged
 
     private bool enabled = true;
     private float intensity = 0.25f;
+    private float groundLight = 0.25f;
     private AuroraQuality quality = AuroraQuality.High;
     private AuroraColorPreset colorPreset = AuroraColorPreset.GreenPurple;
     private Color bottomColor = new Color(30, 238, 221);
@@ -66,6 +67,13 @@ public class Config : INotifyPropertyChanged
     {
         get => intensity;
         set => SetField(ref intensity, value);
+    }
+
+    [Slider(0f, 1f, 0.01f, SliderAttribute.SliderType.Float, description: "Aurora light tinting the terrain below (ambient glow, most visible on snow)")]
+    public float GroundLight
+    {
+        get => groundLight;
+        set => SetField(ref groundLight, value);
     }
 
     [Dropdown(description: "Raymarching quality (number of volume samples per pixel)")]

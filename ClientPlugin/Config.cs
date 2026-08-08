@@ -39,8 +39,8 @@ public class Config : INotifyPropertyChanged
     private float altitudeMin = 0.1f;
     private float altitudeMax = 0.4f;
     private float patternDensity = 1.0f;
-    private float fadeStartFactor = 48f;
-    private float fadeEndFactor = 72f;
+    private float fadeStartFactor = 12f;
+    private float fadeEndFactor = 16f;
     private float animationSpeed = 4.0f;
     private bool nightOnly = true;
 
@@ -133,14 +133,14 @@ public class Config : INotifyPropertyChanged
         set => SetField(ref patternDensity, value);
     }
 
-    [Slider(2f, 200f, 1f, SliderAttribute.SliderType.Float, description: "Distance from the planet where the aurora starts to fade out (multiple of the atmosphere radius)")]
+    [Slider(1f, 100f, 0.1f, SliderAttribute.SliderType.Float, description: "Distance from the planet where the aurora starts to fade out (multiple of the atmosphere radius)")]
     public float FadeStartFactor
     {
         get => fadeStartFactor;
         set => SetField(ref fadeStartFactor, value);
     }
 
-    [Slider(2f, 200f, 1f, SliderAttribute.SliderType.Float, description: "Distance from the planet where the aurora becomes fully invisible (multiple of the atmosphere radius)")]
+    [Slider(1f, 100f, 0.1f, SliderAttribute.SliderType.Float, description: "Distance from the planet where the aurora becomes fully invisible (multiple of the atmosphere radius)")]
     public float FadeEndFactor
     {
         get => fadeEndFactor;

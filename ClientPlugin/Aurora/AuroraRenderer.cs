@@ -33,7 +33,7 @@ public static class AuroraRenderer
         public Vector4 StepParams;      // steps, dither, fade factor (night x distance), height variation
         public Vector4 PatchScroll;     // patch layer1 offset.xy, patch layer2 offset.zw
         public Vector4 PatchParams;     // patch tiling1, patch tiling2, threshold, feather
-        public Vector4 GroundParams;    // ground light intensity, unused x3
+        public Vector4 GroundParams;    // ground light intensity, curtain contrast exponent, unused x2
     }
 
     private static readonly int ConstantsSize = Marshal.SizeOf(typeof(AuroraConstants));
@@ -301,7 +301,7 @@ public static class AuroraRenderer
             StepParams = new Vector4(config.StepCount, 1f, fadeFactor, 0.6f),
             PatchScroll = patchScroll,
             PatchParams = new Vector4(patchTiling1, patchTiling2, patchThreshold, patchFeather),
-            GroundParams = new Vector4(config.GroundLight, 0f, 0f, 0f),
+            GroundParams = new Vector4(config.GroundLight, Math.Max(config.Contrast, 1f), 0f, 0f),
         };
     }
 }

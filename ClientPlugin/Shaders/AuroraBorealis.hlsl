@@ -22,7 +22,7 @@ cbuffer AuroraConstants : register(b1)
     float4 StepParams;      // x = step count, y = dither strength, z = night factor, w = curtain height variation
     float4 PatchScroll;     // xy = patch layer1 UV offset, zw = patch layer2 UV offset
     float4 PatchParams;     // x = patch layer1 UV tiling, y = patch layer2 UV tiling, z = threshold, w = feather
-    float4 GroundParams;    // x = ground light intensity, yzw = unused
+    float4 GroundParams;    // x = ground light intensity, y = curtain contrast exponent, zw = unused
 };
 
 Texture2D<float4> PerlinTex : register(t20);   // R/G: difference-cloud layers, B: curtain height, A: vertical offset
@@ -147,8 +147,8 @@ void __pixel_shader(PostprocessVertex input, out float4 output : SV_Target0)
             if (glow > 0)
             {
                 float2 uvGround = float2(dot(up, Tangent1.xyz), dot(up, Tangent2.xyz));
-                // The curtain pattern is left unsquared: the ground sees the whole sky
-                // dome, so its light is softer than the curtains themselves.
+                // The curtain pattern skips the contrast exponent: the ground sees the
+                // whole sky dome, so its light is softer than the curtains themselves.
                 glow *= PatchMask(uvGround);
                 glow *= CurtainNoise(uvGround * NoiseParams.x + ScrollOffsets.xy,
                                      uvGround * NoiseParams.y + ScrollOffsets.zw);
@@ -249,7 +249,11 @@ void __pixel_shader(PostprocessVertex input, out float4 output : SV_Target0)
             continue;
 
         float4 ramp = ColorRamp.SampleLevel(ClampSampler, float2(hRemapped, 0.5), 0);
-        accum += ramp.rgb * (ramp.a * curtain * curtain * bandMask * patchMask);
+        // The contrast exponent leaves a fully lit curtain at 1 and pushes everything
+        // below it down, so raising it darkens the haze between the curtains without
+        // dimming their cores. Brightness is then the intensity's job alone.
+        float emission = pow(curtain, GroundParams.y);
+        accum += ramp.rgb * (ramp.a * emission * bandMask * patchMask);
     }
 
     // Accumulated emission per unit of shell thickness. A ray crossing the shell near the

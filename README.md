@@ -6,7 +6,7 @@ For support please join the Pulsar Discord: https://discord.gg/z8ZczP2YZY
 
 Please consider supporting my work on Patreon: https://www.patreon.com/semods
 
-![Aurora Borealis](Docs/Screenshot.png)
+![Aurora Borealis with planet](Docs/WithPlanet.png)
 
 ## Prerequisites
 
@@ -34,8 +34,8 @@ Made with the realistic Milky Way skybox.
 
 The night is so much more alive!
 
-![With planet](Docs/WithPlanet.png)
+![Aurora Borealis](Docs/Screenshot.png)
 
 ![From space](Docs/FromSpace.png)
 
-![Above Mountain](Docs/AboveMountain.png)
+![Above mountain](Docs/AboveMountain.png)

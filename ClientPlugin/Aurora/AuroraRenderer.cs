@@ -33,8 +33,12 @@ public static class AuroraRenderer
         public Vector4 StepParams;      // steps, dither, fade factor (night x distance), height variation
         public Vector4 PatchScroll;     // patch layer1 offset.xy, patch layer2 offset.zw
         public Vector4 PatchParams;     // patch tiling1, patch tiling2, threshold, feather
-        public Vector4 GroundParams;    // ground light intensity, unused x3
+        public Vector4 GroundParams;    // ground light intensity, curtain contrast exponent, unused x2
     }
+
+    // Constant buffer slot of AuroraConstants, matching register(b8) in the shader.
+    // The game owns b0-b7 (see MyCommon), so this pass must stay above them.
+    private const int AuroraCbSlot = 8;
 
     private static readonly int ConstantsSize = Marshal.SizeOf(typeof(AuroraConstants));
     private static readonly object InitLock = new object();
@@ -101,11 +105,24 @@ public static class AuroraRenderer
         rc.SetDepthStencilState(MyDepthStencilStateManager.IgnoreDepthStencil);
         rc.SetRtv(MyGBuffer.Main.DepthStencil.DsvRo, MyGBuffer.Main.LBuffer);
 
+        // Bind on the pixel stage only, at a slot the game does not use. Slot 1 is the
+        // game's PROJECTION_SLOT and the other stages are the game's fullscreen quad
+        // vertex shader: taking b1 on AllShaderStages replaced the view-projection
+        // matrix for every later draw that does not rebind it. MyRenderingPass.Begin
+        // restores slots 0/1/5/6, so geometry recovered, but the screen-space passes
+        // after this one (atmosphere, postprocess) do not, and rendered through the
+        // aurora constants instead.
+        //
+        // Bound straight on the device context rather than through rc.PixelShader:
+        // MyCommonStage caches its bindings in an IConstantBuffer[8], so its setter
+        // only accepts the slots the game reserves and would throw on this one. The
+        // cache therefore never covers this slot, so bypassing it desynchronizes
+        // nothing.
         IConstantBuffer cb = rc.GetObjectCB(ConstantsSize);
-        rc.AllShaderStages.SetConstantBuffer(1, cb);
         var mapping = MyMapping.MapDiscard(rc, cb);
         mapping.WriteAndPosition(ref constants);
         mapping.Unmap();
+        rc.DeviceContext.PixelShader.SetConstantBuffer(AuroraCbSlot, cb.Buffer);
 
         rc.PixelShader.Set(pixelShader);
         rc.PixelShader.SetSrv(20, AuroraTextures.Noise);
@@ -125,6 +142,7 @@ public static class AuroraRenderer
         rc.PixelShader.SetSrv(23, null);
         rc.PixelShader.SetSrv(24, null);
         rc.PixelShader.SetSrv(25, null);
+        rc.DeviceContext.PixelShader.SetConstantBuffer(AuroraCbSlot, null);
         rc.SetDepthStencilState(null);
         rc.SetBlendState(null);
         rc.SetRasterizerState(null);
@@ -301,7 +319,7 @@ public static class AuroraRenderer
             StepParams = new Vector4(config.StepCount, 1f, fadeFactor, 0.6f),
             PatchScroll = patchScroll,
             PatchParams = new Vector4(patchTiling1, patchTiling2, patchThreshold, patchFeather),
-            GroundParams = new Vector4(config.GroundLight, 0f, 0f, 0f),
+            GroundParams = new Vector4(config.GroundLight, Math.Max(config.Contrast, 1f), 0f, 0f),
         };
     }
 }

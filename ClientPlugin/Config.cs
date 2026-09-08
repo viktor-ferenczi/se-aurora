@@ -21,6 +21,7 @@ public enum AuroraColorPreset
     Green,
     RedPurple,
     BlueTeal,
+    GreenBlue,
     Custom,
 }
 
@@ -29,18 +30,19 @@ public class Config : INotifyPropertyChanged
     #region Options
 
     private bool enabled = true;
-    private float intensity = 0.25f;
-    private float groundLight = 0.15f;
+    private float intensity = 0.5f;
+    private float contrast = 3f;
+    private float groundLight = 0.1f;
     private AuroraQuality quality = AuroraQuality.High;
-    private AuroraColorPreset colorPreset = AuroraColorPreset.GreenPurple;
+    private AuroraColorPreset colorPreset = AuroraColorPreset.GreenBlue;
     private Color bottomColor = new Color(30, 238, 221);
     private Color topColor = new Color(140, 50, 210);
     private float latitudeCenter = 64f;
     private float latitudeWidth = 24f;
     private float magneticAxisTilt = 25f;
-    private float altitudeMin = 0.1f;
-    private float altitudeMax = 0.2f;
-    private float patternDensity = 1.0f;
+    private float altitudeMin = 0.15f;
+    private float altitudeMax = 0.3f;
+    private float patternDensity = 1.8f;
     private float coverage = 0.3f;
     private float fadeStartFactor = 12f;
     private float fadeEndFactor = 16f;
@@ -67,6 +69,13 @@ public class Config : INotifyPropertyChanged
     {
         get => intensity;
         set => SetField(ref intensity, value);
+    }
+
+    [Slider(1f, 6f, 0.1f, SliderAttribute.SliderType.Float, description: "Separation between the bright curtain cores and the haze between them; higher is punchier, 2 is the soft look of earlier versions")]
+    public float Contrast
+    {
+        get => contrast;
+        set => SetField(ref contrast, value);
     }
 
     [Slider(0f, 1f, 0.01f, SliderAttribute.SliderType.Float, description: "Aurora light tinting the terrain below (ambient glow, most visible on snow)")]
@@ -222,6 +231,14 @@ public class Config : INotifyPropertyChanged
             case AuroraColorPreset.BlueTeal:
                 bottom = new Vector3(0.15f, 0.55f, 1f);
                 top = new Vector3(0.1f, 0.9f, 0.8f);
+                break;
+            // Sampled from photographic northern lights and converted from sRGB to the
+            // linear values the LUT holds: no red at all, the bright cores a cyan-leaning
+            // green and the fading tail a cyan-blue, so the midpoint of the two lands on
+            // the pure cyan that most of such a sky is made of.
+            case AuroraColorPreset.GreenBlue:
+                bottom = new Vector3(0f, 1f, 0.40f);
+                top = new Vector3(0f, 0.27f, 1f);
                 break;
             case AuroraColorPreset.Custom:
                 bottom = bottomColor.ToVector3();

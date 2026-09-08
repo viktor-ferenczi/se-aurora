@@ -8,7 +8,10 @@
 #include <Frame.hlsli>
 #include <Postprocess/PostprocessBase.hlsli>
 
-cbuffer AuroraConstants : register(b1)
+// Slot b8. The game reserves b0-b7 (MyCommon: FRAME 0, PROJECTION 1, OBJECT 2,
+// MATERIAL 3, FOLIAGE 4, ALPHAMASK_VIEWS 5, VOXELS_MATERIALS_LUT 6, FORWARD 7),
+// so anything below b8 is the game's and must not be taken over by this pass.
+cbuffer AuroraConstants : register(b8)
 {
     float4 CenterInner;     // xyz = planet center relative to camera (meters), w = shell inner radius
     float4 PoleOuter;       // xyz = magnetic pole axis (unit), w = shell outer radius

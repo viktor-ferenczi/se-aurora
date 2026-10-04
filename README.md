@@ -39,3 +39,13 @@ The night is so much more alive!
 ![From space](Docs/FromSpace.png)
 
 ![Above mountain](Docs/AboveMountain.png)
+
+## Development
+
+Load the working copy through a Pulsar development folder: start Pulsar with `-sources`, then
+add this repository with the Sources button and load `Aurora.xml` with it.
+
+Building `Aurora.sln` does not deploy the plugin. It is copied into Pulsar's `Local` plugin folder
+only if `Pulsar` is set in `Directory.Build.props.user` or passed as `-p:Pulsar=...`. Running
+`setup.py` creates `Directory.Build.props.user` with the detected game folder. The plugin version
+is in `Version.Build.props`.
